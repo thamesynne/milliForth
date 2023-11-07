@@ -245,3 +245,8 @@ db 0x55, 0xaa
 %endif
 
 here:
+
+; use -DFLOPPY to make something Bochs can boot
+%ifdef FLOPPY
+times 719*512 db 0
+%endif
