@@ -97,10 +97,8 @@ defword ":",COLON
 	mov al,cl
 	stosb
 	rep movsb
-	mov ax,0x26ff
+	mov ax,0xD2FF		; call dx 
 	stosw
-	mov ax,DOCOL.addr
-    stosw 
     mov [HERE],di
     mov byte [STATE],0
     pop si
@@ -110,12 +108,8 @@ DOCOL:
 	xchg sp,bp
 	push si
 	xchg sp,bp
-	xchg ax,si
-	lodsw
-	lodsw
+	pop si
 	jmp NEXT
-.addr:
-	dw DOCOL
 
 defword "key",KEY
     mov ah,0
@@ -147,13 +141,14 @@ main:
 	mov word [LATEST],word_SEMICOLON
 	mov word [HERE],here
 error:
-	mov ax,13
+	mov al,13
 	call putchar
 exec:
 	mov sp,STACK_BASE
 	mov bp,RSTACK_BASE
 	mov byte [STATE],1
 	mov byte [TIB],0
+	mov dx,DOCOL
 
 find:
 	call tok
@@ -164,11 +159,12 @@ find:
 
 	mov si,bx
 	lodsw
+	xchg ax,bx
 	lodsb
 	mov dl,al
 	and al,LEN_MASK
 	cmp al,cl
-	jne .2
+	jne .1
 
 	push cx
 	push di
@@ -176,18 +172,17 @@ find:
 	pop di
 	pop cx
 
-	je .3
-.2:	mov bx,[bx]
-	jmp .1
-.3: mov ax,si
+	jne .1
+	xchg ax,si
 	mov si,_find
 	and dl,FLAG_IMM
 	or dl,[STATE]
+	mov dl,DOCOL & 255
 	jz compile
 	jmp ax
 
 getline:
-	mov di,TIB
+	xor di,di		; mov di, TIB is pointless when TIB is assumed to be 0
 .1:	call getchar
 	cmp al,10
 	je .2
@@ -235,7 +230,7 @@ putchar:
 %ifdef BACKSPACE
 	cmp al,8
 	jne .2
-	cmp di,TIB
+	test di,di
 	je .3
 	dec di
 .3:	jmp getchar
