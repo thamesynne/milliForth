@@ -6,7 +6,7 @@ A FORTH in an ever decreasing number of bytes, currently 371 — the smallest re
 
 ## bytes?
 
-Yes, bytes.  This is a FORTH so small it fits in a 512-byte boot sector.  This isn't new — sectorFORTH[^1] successfully fit a FORTH within the boot sector.  However, milliFORTH appears to be *the smallest* "real" programming language implementation ever, beating out sectorLISP[^2], a mind-blowing 436 byte implementation of LISP, by 56 bytes.  ("real" excludes esolangs and other non-production languages - for example, the sectorLISP author's implementation of BF is just 99 bytes, but it clearly isn't used to any serious capacity.)
+Yes, bytes.  This is a FORTH so small it fits in a 512-byte boot sector.  This isn't new — sectorFORTH[^1] successfully fit a FORTH within the boot sector.  However, milliFORTH appears to be *the smallest* "real" programming language implementation ever, beating out sectorLISP[^2], a mind-blowing 436 byte implementation of LISP, by an ever increasing number of bytes (currently 65).  ("real" excludes esolangs and other non-production languages - for example, the sectorLISP author's implementation of BF is just 99 bytes, but it clearly isn't used to any serious capacity.)
 
 ## Language
 
