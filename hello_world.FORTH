@@ -23,7 +23,7 @@
 : 2drop drop drop ;
 : or invert swap invert and invert ;
 : , here @ ! here @ 2 + here ! ;
-: 80h 1 2* 2* 2* 2* 2* 2* 2* ;
+: 80h 4 2* 2* 2* 2* 2* ;
 : immediate latest @ 2 + dup @ 80h or swap ! ;
 : [ 1 s@ ! ; immediate
 : ] 0 s@ ! ;
