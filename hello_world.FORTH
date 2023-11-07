@@ -1,4 +1,5 @@
 : dup sp@ @ ;
+: drop sp@ ! ;
 : -1 s@ 0# ;
 : 0= 0# 0# ;
 : 0 s@ 0= ;
@@ -15,7 +16,6 @@
 : - invert 1 + + ;
 : <> - 0# ;
 : = <> invert ;
-: drop dup - + ;
 : over sp@ 2 + @ ;
 : swap over over sp@ 6 + ! sp@ 2 + ! ;
 : 2dup over over ;
