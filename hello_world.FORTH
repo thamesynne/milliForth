@@ -1,14 +1,16 @@
 : dup sp@ @ ;
-: -1 s@ s@ nand s@ nand ;
-: 0 -1 dup nand ;
-: 1 -1 dup + dup nand ;
+: -1 s@ 0# ;
+: 0= 0# 0# ;
+: 0 s@ 0= ;
+: 2* dup + ;
+: invert dup nand ;
+: 1 -1 2* invert ;
 : 2 1 1 + ;
 : 4 2 2 + ;
 : 6 2 4 + ;
 : >in s@ 2 + ;
 : latest s@ 4 + ;
 : here s@ 6 + ;
-: invert dup nand ;
 : and nand invert ;
 : - invert 1 + + ;
 : <> - 0# ;
@@ -17,10 +19,10 @@
 : over sp@ 2 + @ ;
 : swap over over sp@ 6 + ! sp@ 2 + ! ;
 : 2dup over over ;
+: xor 2dup 2* negate + + ;
 : 2drop drop drop ;
 : or invert swap invert and invert ;
 : , here @ ! here @ 2 + here ! ;
-: 2* dup + ;
 : 80h 1 2* 2* 2* 2* 2* 2* 2* ;
 : immediate latest @ 2 + dup @ 80h or swap ! ;
 : [ 1 s@ ! ; immediate
