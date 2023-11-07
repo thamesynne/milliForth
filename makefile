@@ -1,5 +1,5 @@
 run:
-	yasm -f bin -o sector.bin sector.asm
+	yasm -f bin -o sector.bin sector.asm -l sector.lst
 	qemu-system-i386 -fda sector.bin
 
 emulate:
