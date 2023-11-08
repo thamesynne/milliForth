@@ -177,8 +177,8 @@ find:
 	mov si,_find
 	and dl,FLAG_IMM
 	or dl,[STATE]
-	mov dl,DOCOL & 255
-	jz compile
+	mov dl,DOCOL & 255	; must restore dx to DOCOL!
+	jz compile		; still, it's only used here...
 	jmp ax
 
 getline:
