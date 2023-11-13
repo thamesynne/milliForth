@@ -1,9 +1,6 @@
 # milliForth
 A FORTH in an ever decreasing number of bytes, currently 355 — the smallest real programming language ever, as of yet.
 
-![milliFORTH_justhelloworld](https://github.com/fuzzballcat/milliForth/assets/57006511/ef3d48cf-1581-4574-8625-8d97b00acaca)
-*The code in the above gif, that of \[an older version of\] `hello_world.FORTH`, is a modified version of the hello world program used by sectorFORTH (see below)*
-
 ## bytes?
 
 Yes, bytes.  This is a FORTH so small it fits in a 512-byte boot sector.  This isn't new — both sectorFORTH[^1] and miniforth[^2][ successfully fit a FORTH within the boot sector.  However, milliFORTH appears to be *the smallest* "real"[^3] programming language implementation ever, beating out sectorLISP[^4], a 436 byte implementation of LISP, by an ever increasing number of bytes (currently 81).
@@ -20,27 +17,29 @@ FORTH itself will not be explained here (prior understanding assumed).  Being so
 | `!` | `( value addr -- )` | Store a value at an address |
 | `sp@` | `( -- sp )` | Get pointer to top of the data stack |
 | `rp@` | `( -- rp )` | Get pointer to top of the return stack |
-| `0=` | `( value -- flag )` | Check if a value equals zero (-1 = TRUE, 0 = FALSE) |
+| `0#` | `( value -- flag )` | Check if a value differs from zero (-1 = TRUE, 0 = FALSE) |
 | `+` | `( a b -- a+b )` | Sum two numbers |
 | `nand` | `( a b -- aNANDb )` | NAND two numbers |
 | `exit` | `( r:addr -- )` | Pop from the return stack, resume execution at the popped address |
+| `,` | `( a -- )` | Store the top of the data stack into the top of the dictionary, advancing the pointer |
 | `key` | `( -- key )` | Read a keystroke |
+| `:` | `( -- )` | Begin a colon definition, set the state to compilation |
+| `;` | `( -- )` | End a colon definition, set the state to interpretation |
 | `emit` | `( char -- )` | Print out an ASCII character |
 | `s@` | `( -- s@ )` | The "state struct" pointer.  The cells of this struct are, in order: <ul><li>`state`: The state of the interpreter (0 = compile words, 1 = execute words)</li><li>`>in`: Pointer to the current offset into the terminal input buffer</li><li>`latest`: The pointer to the most recent dictionary space</li><li>`here`: The pointer to the next available space in the dictionary</li></ul> |
 
-On a fundamental level, milliFORTH the same FORTH as implemented by sectorFORTH, with a few modifications:
+On a fundamental level, milliFORTH is almost the same FORTH as implemented by sectorFORTH:
 
 - All of the interpreter state words are bundled into a single struct (`s@`).
 - Words don't get hidden while you are defining them.  This doesn't really hinder your actual ability to write programs, but rather makes it possible to hang the interpreter if you do something wrong in this respect.
-- There's no `tib` (terminal input buffer) word, because `tib` always starts at `0x0000`, so you can just use `>in` and don't need to add anything to it.
-- In the small (production) version, the delete key doesn't work.  I think this is fair since sectorLISP doesn't handle backspace either; even if you add it back, milliFORTH is still smaller by a few bytes.
-- Error handling is even sparser.  Successful input results in nothing (no familiar `ok.`).  Erroneous input prints an extra blank line between the previous input and the next prompt.
+- There's no terminal input buffer, as such. Words are accepted and acted upon as soon as a space (or CR) is typed.
+- Error handling is even sparser.  Successful input results in nothing (no familiar `ok.`).  Erroneous input prints character 19 between the previous input and the next prompt.
 
 ## Use
 
 sector.bin is an assembled binary of sector.asm.  You can run it using `make emulate`, which invokes (and thus requires) `qemu-system-i386`, or by using any emulator of your choice.
 
-Alternatively, `make` will reassemble sector.asm, then run the above qemu emulator.
+Alternatively, `make` will reassemble sector.asm, then run the above qemu emulator; and `make bochs` will run it in the `bochs` emulator, which thamesynne finds more useful for debugging.
 
 **Included in this repo is a pyautogui script** which can be run to automatically type in the `hello_world.FORTH` file into your qemu emulator.  A very useful tool.  It is self-explaining, but usage involves simply starting the QEMU emulator, running the python script, and putting your cursor into the QEMU emulator again.
 
