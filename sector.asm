@@ -8,10 +8,12 @@ STACK_BASE equ 0xfffe
 TIB equ 0x0000
 TIBP1 equ TIB+1
 STATE equ 0x1000 
+COMPILING equ 0
+INTERPRETING equ 0x80
 CIN equ 0x1002
 LATEST equ 0x1004
 HERE equ 0x1006
-FLAG_IMM equ 1<<7
+FLAG_IMM equ 0x80
 LEN_MASK equ (1<<5)-1 ; have some extra flags, why not
 
 %define link 0
@@ -91,7 +93,7 @@ defword ":",COLON
 	mov ax,0xD2FF		; call dx 
 	stosw
 	mov [HERE],di
- 	mov byte [STATE],0
+ 	mov byte [STATE],COMPILING
 	jmp NEXT
 
 DOCOL:
@@ -130,7 +132,7 @@ compile:
 	jmp NEXT
 
 defword ";",SEMICOLON,FLAG_IMM
-	mov byte [STATE],1
+	mov byte [STATE],INTERPRETING
 	mov ax, EXIT
 	jmp compile
 
@@ -149,7 +151,7 @@ error:
 exec:
 	mov sp,STACK_BASE
 	mov bp,RSTACK_BASE
-	mov byte [STATE],1
+	mov byte [STATE],INTERPRETING
 	mov dx,DOCOL
 
 repl:
@@ -177,9 +179,8 @@ repl:
 	jne .1
 
 	xchg ax,si
-	and dl,FLAG_IMM
-	or dl,[STATE]
-	jnz .2
+	or dl,[STATE]		; if bit 7 of DL is set now, we interpret 
+	js .2
 	  push ax
 	  mov ax,COMMA
 .2:	mov dl,DOCOL & 255	; must restore dx to DOCOL!
