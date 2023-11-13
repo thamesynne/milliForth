@@ -1,9 +1,9 @@
 # milliForth
-A FORTH in an ever decreasing number of bytes, currently 355 — the smallest real programming language ever, as of yet.
+A FORTH in an ever decreasing number of bytes, currently 352 — the smallest real programming language ever, as of yet.
 
 ## bytes?
 
-Yes, bytes.  This is a FORTH so small it fits in a 512-byte boot sector.  This isn't new — both sectorFORTH[^1] and miniforth[^2][ successfully fit a FORTH within the boot sector.  However, milliFORTH appears to be *the smallest* "real"[^3] programming language implementation ever, beating out sectorLISP[^4], a 436 byte implementation of LISP, by an ever increasing number of bytes (currently 81).
+Yes, bytes.  This is a FORTH so small it fits in a 512-byte boot sector.  This isn't new — both sectorFORTH[^1] and miniforth[^2][ successfully fit a FORTH within the boot sector.  However, milliFORTH appears to be *the smallest* "real"[^3] programming language implementation ever, beating out sectorLISP[^4], a 436 byte implementation of LISP, by an ever increasing number of bytes (currently 84).
 
 ## Language
 
