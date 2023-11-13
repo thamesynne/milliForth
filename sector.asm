@@ -1,9 +1,5 @@
 	bits 16
-%ifdef COMPATIBLE_8088
-	cpu 8086
-%else
-	cpu 386
-%endif
+	cpu 8086		; tamsyn's house, tamsyn's rules
 	jmp 0x0050:main
 	org 0x7700
 
@@ -49,25 +45,25 @@ defword "rp@",RPFETCH
 
 defword "0#",ZEROEQ
 	pop ax
-    neg ax
+	neg ax
 	sbb ax,ax
-    push ax
-    jmp NEXT
+	push ax
+	jmp NEXT
 
 defword "+",PLUS
-    pop bx
-    pop ax
-    add ax,bx
-    push ax
-    jmp NEXT
+	pop bx
+	pop ax
+	add ax,bx
+	push ax
+	jmp NEXT
 
 defword "nand",NAND
-    pop bx
-    pop ax
-    and ax,bx
-    not ax
-    push ax
-    jmp NEXT
+	pop bx
+	pop ax
+	and ax,bx
+	not ax
+ 	push ax
+	jmp NEXT
 
 defword "exit",EXIT
 	xchg sp,bp
@@ -76,33 +72,27 @@ defword "exit",EXIT
 	jmp NEXT
 
 defword "s@",STATEVAR
-%ifdef COMPATIBLE_8088
-    mov ax,STATE
-    push ax
-%else
-	push word STATE
-%endif
+	mov ax,STATE
+	push ax
 NEXT:
 	lodsw
 	jmp ax
 
 defword ":",COLON
-	call tok
-	push si
-	mov si,di
 	mov di,[HERE]
 	mov ax,[LATEST]
 	mov [LATEST],di
-	stosw
-	mov al,cl
-	stosb
-	rep movsb
+	stosw			; link
+	inc di			; save byte for length
+	mov cx,di		; tok takes cx=buffer
+	call tok		; get token inline
+	mov [di-1],cl		; store length
+	add di,cx
 	mov ax,0xD2FF		; call dx 
 	stosw
-    mov [HERE],di
-    mov byte [STATE],0
-    pop si
-    jmp NEXT
+	mov [HERE],di
+ 	mov byte [STATE],0
+	jmp NEXT
 
 DOCOL:
 	xchg sp,bp
@@ -112,24 +102,37 @@ DOCOL:
 	jmp NEXT
 
 defword "key",KEY
-    mov ah,0
-    int 0x16
-    push ax
-    jmp NEXT
+	xor ax,ax		; might want to omit this 
+	int 0x16
+	push ax
+	jmp NEXT
 
 defword "emit",EMIT
-    pop ax
-    call putchar
-    jmp NEXT
+	lodsw			; next in thread 
+	pop bx			; char to emit
+	push ax			; next word to execute => ret addr 
+	xchg ax,bx
+put	mov ah,14		; tty output
+	int 0x10
+	cmp al,13		; did we write CR? 
+	jne .r
+	mov al,10		; if so, write LF too, 
+	int 0x10
+	mov al,bl		; & say we wrote what's in BL 
+.r	ret
 
-defword ";",SEMICOLON,FLAG_IMM
-	mov byte [STATE],1
-	mov ax, EXIT
+defword ",",COMMA
+	pop ax
 compile:
 	mov di,[HERE]
 	stosw
 	mov [HERE],di
 	jmp NEXT
+
+defword ";",SEMICOLON,FLAG_IMM
+	mov byte [STATE],1
+	mov ax, EXIT
+	jmp compile
 
 main:
 	push cs
@@ -141,16 +144,16 @@ main:
 	mov word [LATEST],word_SEMICOLON
 	mov word [HERE],here
 error:
-	mov al,13
-	call putchar
+	mov al,19		; double-exclamation 
+	call put
 exec:
 	mov sp,STACK_BASE
 	mov bp,RSTACK_BASE
 	mov byte [STATE],1
-	mov byte [TIB],0
 	mov dx,DOCOL
 
-find:
+repl:
+	xor cx,cx		; get token to buffer at 0x0 
 	call tok
 
 	mov bx,[LATEST]
@@ -171,73 +174,40 @@ find:
 	repe cmpsb
 	pop di
 	pop cx
-
 	jne .1
+
 	xchg ax,si
-	mov si,_find
 	and dl,FLAG_IMM
 	or dl,[STATE]
-	mov dl,DOCOL & 255	; must restore dx to DOCOL!
-	jz compile		; still, it's only used here...
+	jnz .2
+	  push ax
+	  mov ax,COMMA
+.2:	mov dl,DOCOL & 255	; must restore dx to DOCOL!
+	call _go
+	dw repl
+_go:
+	pop si
 	jmp ax
 
-getline:
-	xor di,di		; mov di, TIB is pointless when TIB is assumed to be 0
-.1:	call getchar
-	cmp al,10
-	je .2
-	stosb
-	jmp .1
-.2: mov ax, 0x0020
-	stosw
-	mov word [CIN],0
-tok:
-	mov di,[CIN]
-	mov al,32
-	mov cx,-1
-
-	repe scasb
-	dec di
-	cmp byte [di],0
-	je getline
-	mov cx,-1
-
-	repne scasb
-	dec di
-	mov [CIN],di
-	not cx
-	dec cx
-	sub di,cx
+tok:	mov bl,32		; stop at space
+wrd:	mov di,cx		; reset position to buf start
+_ch:	mov ah,0
+	int 0x16		; get a key
+	cmp al,8		; is it a backspace?
+	jne _wr-1		; if so
+	dec di			; remove last character stored 
+	cmp di,cx		; did that take us before start?
+	jl wrd			; if so, reset everything
+	test al,0xAA		; otherwise skip stosb and...
+_wr:	call put		; print keypress 
+	cmp al,bl		; is it the terminator?
+	jne _ch			; if not, go again, otherwise...
+	dec di			; we stored terminator, undo that 
+	sub di,cx		; calculate length
+	jle wrd			; don't go home empty handed 
+	xchg cx,di		; return length in cx, origin in di
 	ret
 
-_find: dw find
-
-getchar:
-	xor	ax,ax
-	int 0x16
-putchar:
-	mov ah,0x0e
-	cmp al,13
-	jne .1
-	int 0x10
-	mov al,10
-.1:	int 0x10
-
-; The below lines are a "QOL" improvement: the delete key.
-; Since sectorLISP does not handle the delete key, I have commented them out for a fair comparison of size.
-; Even when re-added, this FORTH is still smaller, however.
-
-%ifdef BACKSPACE
-	cmp al,8
-	jne .2
-	test di,di
-	je .3
-	dec di
-.3:	jmp getchar
-.2:
-%endif
-
-	ret
 
 %ifndef CHECKSIZE
 times 510-($-$$) db 0
