@@ -5,16 +5,14 @@
 
 RSTACK_BASE equ 0x76fe
 STACK_BASE equ 0xfffe
-TIB equ 0x0000
-TIBP1 equ TIB+1
-STATE equ 0x1000 
 COMPILING equ 0
 INTERPRETING equ 0x80
-CIN equ 0x1002
-LATEST equ 0x1004
-HERE equ 0x1006
 FLAG_IMM equ 0x80
 LEN_MASK equ (1<<5)-1 ; have some extra flags, why not
+
+STATE	dw INTERPRETING		; let's not worry about initialisation
+HERE	dw here
+LATEST	dw word_SEMICOLON
 
 %define link 0
 %macro defword 2-3 0
@@ -45,7 +43,7 @@ defword "rp@",RPFETCH
 	push bp
 	jmp NEXT
 
-defword "0#",ZEROEQ
+defword "0#",NOTZERO
 	pop ax
 	neg ax
 	sbb ax,ax
@@ -143,8 +141,6 @@ main:
 	pop ds
 	pop es
 	pop ss
-	mov word [LATEST],word_SEMICOLON
-	mov word [HERE],here
 error:
 	mov al,19		; double-exclamation 
 	call put
@@ -152,8 +148,8 @@ exec:
 	mov sp,STACK_BASE
 	mov bp,RSTACK_BASE
 	mov byte [STATE],INTERPRETING
+ok:
 	mov dx,DOCOL
-
 repl:
 	xor cx,cx		; get token to buffer at 0x0 
 	call tok
