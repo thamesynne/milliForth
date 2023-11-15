@@ -9,9 +9,8 @@
 : 2 1 1 + ;
 : 4 2 2 + ;
 : 6 2 4 + ;
-: >in s@ 2 + ;
-: latest s@ 4 + ;
-: here s@ 6 + ;
+: latest s@ 2 + ;
+: here s@ 4 + ;
 : and nand invert ;
 : - invert 1 + + ;
 : <> - 0# ;
