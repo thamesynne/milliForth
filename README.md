@@ -1,3 +1,5 @@
+## PLEASE NOTE: this repo has moved to https://bitbucket.org/millihertz/milliforth and is archived here
+
 # milliForth
 A FORTH in an ever decreasing number of bytes, currently 346 — the smallest real programming language ever, as of yet.
 
